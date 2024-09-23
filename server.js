@@ -11,9 +11,11 @@ function serveFile(filePath, contentType, res) {
     if (err) {
       res.writeHead(404, { 'Content-Type': 'text/plain' });
       res.write('404 Not Found');
+      console.log(`Response: 404 Not Found`);  // Log 404 status
     } else {
       res.writeHead(200, { 'Content-Type': contentType });
       res.write(data);
+      console.log(`Response: 200 OK`);  // Log 200 status
     }
     res.end();
   });
@@ -21,6 +23,9 @@ function serveFile(filePath, contentType, res) {
 
 // Create the server
 http.createServer(function (req, res) {
+  // Log the incoming request
+  console.log(`Incoming request: ${req.method} ${req.url}`);
+
   // Set the default file to be served (index.html)
   let filePath = path.join(publicFolder, req.url === '/' ? 'index.html' : req.url);
 
@@ -47,7 +52,7 @@ http.createServer(function (req, res) {
     case '.ico':
       contentType = 'image/x-icon';
       break;
-    case '.manifest':  // Serve the manifest file with correct header
+    case '.webmanifest':  // Correct content type for webmanifest files
       contentType = 'application/manifest+json';
       break;
     default:
@@ -57,11 +62,14 @@ http.createServer(function (req, res) {
   // Serve the file
   fs.stat(filePath, (err, stats) => {
     if (err || !stats.isFile()) {
-      // If the file is not found, return a 404
+      // Log the 404 error and respond
+      console.log(`Error: File not found for ${req.url}`);
       res.writeHead(404, { 'Content-Type': 'text/plain' });
       res.write('404 Not Found');
+      console.log(`Response: 404 Not Found`);
       res.end();
     } else {
+      // Log the 200 success and serve the file
       serveFile(filePath, contentType, res);
     }
   });
@@ -69,4 +77,3 @@ http.createServer(function (req, res) {
 }).listen(3000);
 
 console.log("Server started on port 3000");
-
