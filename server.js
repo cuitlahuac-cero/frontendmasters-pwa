@@ -1,6 +1,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const url = require('url'); // Add URL module to handle query params
 
 // Define the base folder for serving static files
 const publicFolder = path.join(__dirname, 'public');
@@ -23,11 +24,21 @@ function serveFile(filePath, contentType, res) {
 
 // Create the server
 http.createServer(function (req, res) {
-  // Log the incoming request
+  // Log the incoming request with query params
   console.log(`Incoming request: ${req.method} ${req.url}`);
 
+  // Parse the URL to handle query parameters
+  const parsedUrl = url.parse(req.url, true); // Parse the URL and query string
+  const pathname = parsedUrl.pathname; // Get the pathname without query params
+  const queryParams = parsedUrl.query; // Get query parameters as an object
+
+  // Log query parameters (if any)
+  if (Object.keys(queryParams).length > 0) {
+    console.log(`Query parameters:`, queryParams);
+  }
+
   // Set the default file to be served (index.html)
-  let filePath = path.join(publicFolder, req.url === '/' ? 'index.html' : req.url);
+  let filePath = path.join(publicFolder, pathname === '/' ? 'index.html' : pathname);
 
   // Determine the content type based on the file extension
   const extname = path.extname(filePath);
@@ -63,7 +74,7 @@ http.createServer(function (req, res) {
   fs.stat(filePath, (err, stats) => {
     if (err || !stats.isFile()) {
       // Log the 404 error and respond
-      console.log(`Error: File not found for ${req.url}`);
+      console.log(`Error: File not found for ${pathname}`);
       res.writeHead(404, { 'Content-Type': 'text/plain' });
       res.write('404 Not Found');
       console.log(`Response: 404 Not Found`);
